@@ -44,7 +44,8 @@ export interface Variable {
         argument?: string,
         configurationSection?: string,
         commandIdVariables?: CommandIdVariables,
-        configuration?: unknown
+        configuration?: unknown,
+        trackEscape?: string[],
     ): MaybePromise<Object | undefined>;
 }
 

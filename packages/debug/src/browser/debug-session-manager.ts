@@ -251,7 +251,7 @@ export class DebugSessionManager {
                 configurationSection: 'launch',
                 commandIdVariables,
                 configuration,
-                checkAllResolved: true
+                trackEscape: []
             });
 
             if (configuration) {

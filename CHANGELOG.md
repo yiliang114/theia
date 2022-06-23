@@ -64,6 +64,7 @@
 - [plugin-ext] method `registerDebuggersContributions` has an additional parameter in the signature `pluginType` to specify `frontend` or `backend` [#10748](https://github.com/eclipse-theia/theia/pull/10748)
 - [plugin-ext] file `debug` renamed to `debug-ext` [#10748](https://github.com/eclipse-theia/theia/pull/10748)
 - [debug] debug files not unique to the backend have been moved from `node` to `common` [#10748](https://github.com/eclipse-theia/theia/pull/10748)
+- [variable-resolver] The interface `VariableResolveOptions` was updated to remove `checkAllResolved` and introduce `trackEscape` [#11332](https://github.com/eclipse-theia/theia/pull/11332)
 
 ## v1.26.0 - 5/26/2022
 

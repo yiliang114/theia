@@ -81,9 +81,9 @@ describe('variable-resolver-service', () => {
         expect(resolved).is.equal('workspace: ${workspaceRoot}; file: package.json; line: 6');
     });
 
-    it('should check if all variables are resolved', async () => {
+    it('should resolve to `undefined` when `escape` entries are found', async () => {
         const options = {
-            checkAllResolved: true
+            trackEscape: ['escapeId']
         };
         const resolved = await variableResolverService.resolve('workspace: ${command:testCommand}; file: ${file}; line: ${lineNumber}', options);
         expect(resolved).equal(undefined);
