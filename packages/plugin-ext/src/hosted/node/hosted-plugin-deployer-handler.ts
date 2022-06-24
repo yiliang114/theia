@@ -190,6 +190,7 @@ export class HostedPluginDeployerHandler implements PluginDeployerHandler {
             }
             await fs.remove(originalPath);
             this.originalLocations.delete(pluginId);
+            this.localizationService.undeployLocalizations(pluginId);
             this.uninstallationManager.markAsUninstalled(pluginId);
             return true;
         } catch (e) {

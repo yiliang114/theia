@@ -19,9 +19,11 @@ import * as fs from '@theia/core/shared/fs-extra';
 import { LocalizationProvider } from '@theia/core/lib/node/i18n/localization-provider';
 import { Localization } from '@theia/core/lib/common/i18n/localization';
 import { inject, injectable } from '@theia/core/shared/inversify';
-import { DeployedPlugin, Localization as PluginLocalization } from '../../common';
+import { DeployedPlugin, Localization as PluginLocalization, PluginIdentifiers } from '../../common';
 import { URI } from '@theia/core/shared/vscode-uri';
 import { EnvVariablesServer } from '@theia/core/lib/common/env-variables';
+import { BackendApplicationContribution } from '@theia/core/lib/node';
+import { Disposable } from '@theia/core';
 
 export interface VSCodeNlsConfig {
     locale: string
@@ -34,7 +36,7 @@ export interface VSCodeNlsConfig {
 }
 
 @injectable()
-export class HostedPluginLocalizationService {
+export class HostedPluginLocalizationService implements BackendApplicationContribution {
 
     @inject(LocalizationProvider)
     protected readonly localizationProvider: LocalizationProvider;
@@ -42,12 +44,28 @@ export class HostedPluginLocalizationService {
     @inject(EnvVariablesServer)
     protected readonly envVariables: EnvVariablesServer;
 
+    protected localizationDisposeMap = new Map<string, Disposable>();
     protected translationConfigFiles: Map<string, string> = new Map();
+
+    async initialize(): Promise<void> {
+        const cacheDir = await this.getLocalizationCacheDir();
+        await fs.emptyDir(cacheDir);
+    }
 
     deployLocalizations(plugin: DeployedPlugin): void {
         if (plugin.contributes?.localizations) {
-            this.localizationProvider.addLocalizations(...buildLocalizations(plugin.contributes.localizations));
+            const localizations = buildLocalizations(plugin.contributes.localizations);
+            const versionedId = PluginIdentifiers.componentsToVersionedId(plugin.metadata.model);
+            this.localizationDisposeMap.set(versionedId, Disposable.create(() => {
+                this.localizationProvider.removeLocalizations(...localizations);
+                this.localizationDisposeMap.delete(versionedId);
+            }));
+            this.localizationProvider.addLocalizations(...localizations);
         }
+    }
+
+    undeployLocalizations(plugin: PluginIdentifiers.VersionedId): void {
+        this.localizationDisposeMap.get(plugin)?.dispose();
     }
 
     async localizePlugin(plugin: DeployedPlugin): Promise<DeployedPlugin> {
@@ -85,8 +103,7 @@ export class HostedPluginLocalizationService {
     }
 
     async buildTranslationConfig(plugins: DeployedPlugin[]): Promise<void> {
-        const configDir = URI.parse(await this.envVariables.getConfigDirUri()).fsPath;
-        const cacheDir = path.join(configDir, 'localization-cache');
+        const cacheDir = await this.getLocalizationCacheDir();
         const configs = new Map<string, Record<string, string>>();
         for (const plugin of plugins) {
             if (plugin.contributes?.localizations) {
@@ -109,6 +126,12 @@ export class HostedPluginLocalizationService {
             this.translationConfigFiles.set(language, configFile);
             await fs.writeJson(configFile, config);
         }
+    }
+
+    protected async getLocalizationCacheDir(): Promise<string> {
+        const configDir = URI.parse(await this.envVariables.getConfigDirUri()).fsPath;
+        const cacheDir = path.join(configDir, 'localization-cache');
+        return cacheDir;
     }
 }
 
