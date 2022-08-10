@@ -337,7 +337,7 @@
 .theia-vsx-extension-editor .action {
     font-weight: 600;
     margin-top: calc(var(--theia-ui-padding)*5/3);
-    margin-left: 0px;
+    margin-left: 2px;
     padding: 1px var(--theia-ui-padding);
     vertical-align: middle;
 }
